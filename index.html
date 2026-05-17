@@ -8,37 +8,35 @@
 <style>
 :root {
   --green: #4ade80;
-  --green-dim: #1a3a1a;
-  --green-dark: #0a150a;
-  --bg: #060e06;
   --red: #f87171;
   --yellow: #facc15;
   --blue: #60a5fa;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body {
-  background: linear-gradient(180deg,#060e06 0%,#0b1a0b 60%,#060e06 100%);
+  background: #000;
   min-height:100vh; color:#e4f0e4;
   font-family:'VT323',monospace;
   overflow-x:hidden;
 }
 
-/* BG effects */
-.grid-bg {
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:
-    linear-gradient(rgba(74,222,128,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(74,222,128,.025) 1px,transparent 1px);
-  background-size:32px 32px;
+/* BG Canvas */
+#bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+
+/* Vignette */
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.85) 100%);
 }
-.scanlines {
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+
+/* Scanlines */
+.scanlines{
+  position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);
 }
-#stars-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
 
 /* Layout */
-.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:32px 16px;}
+.wrap{position:relative;z-index:2;max-width:980px;margin:0 auto;padding:32px 16px;}
 
 /* Header */
 .header{text-align:center;margin-bottom:36px;animation:fadeDown .6s ease both;}
@@ -48,170 +46,191 @@ body {
   font-size:clamp(13px,2.8vw,22px);
   color:var(--green);
   animation:pulseGlow 2.5s ease-in-out infinite;
-  line-height:1.5; margin-bottom:8px;
+  line-height:1.5; margin-bottom:10px;
 }
-.subtitle{color:#3a7a4a;font-size:22px;letter-spacing:.1em;}
-.torch{animation:torchFlicker .6s ease-in-out infinite;display:inline-block;}
-.torch2{animation:torchFlicker .6s ease-in-out infinite .4s;display:inline-block;}
+.subtitle{
+  color:#aaa;
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(8px,1.4vw,12px);
+  letter-spacing:.15em;
+  text-transform:uppercase;
+}
 
-/* Stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;}
+/* Stats — only total */
+.stats{display:flex;justify-content:center;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
 .stat-card{
-  border-radius:10px;padding:14px 8px;text-align:center;
+  border-radius:10px;padding:16px 32px;text-align:center;
   animation:statPop .4s cubic-bezier(.34,1.56,.64,1) both;
 }
-.stat-icon{font-size:24px;margin-bottom:2px;}
-.stat-val{font-family:'Press Start 2P',monospace;font-size:20px;}
-.stat-lbl{font-size:13px;color:#3a6a3a;letter-spacing:.1em;margin-top:2px;}
+.stat-val{font-family:'Press Start 2P',monospace;font-size:28px;}
+.stat-lbl{font-size:15px;color:#555;letter-spacing:.15em;margin-top:4px;font-family:'Press Start 2P',monospace;font-size:9px;}
 
 /* Controls */
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
 .search{
-  background:#0a180a;border:1px solid #1e3a1e;border-radius:6px;
-  color:#c0ddc0;padding:10px 14px;font-size:20px;
+  background:#0a0a0a;border:1px solid #222;border-radius:6px;
+  color:#ccc;padding:10px 14px;font-size:20px;
   flex:1;min-width:160px;font-family:'VT323',monospace;
   transition:border-color .2s,box-shadow .2s;
 }
-.search:focus{border-color:var(--green);box-shadow:0 0 14px rgba(74,222,128,.25);outline:none;}
+.search:focus{border-color:var(--green);box-shadow:0 0 14px rgba(74,222,128,.2);outline:none;}
 .btn-add{
-  background:#0d2a0d;border:2px solid var(--green);color:var(--green);
+  background:#000;border:2px solid var(--green);color:var(--green);
   border-radius:6px;padding:10px 20px;cursor:pointer;
   font-family:'Press Start 2P',monospace;font-size:9px;
   text-shadow:0 0 8px rgba(74,222,128,.5);white-space:nowrap;
   transition:all .2s;
 }
-.btn-add:hover{background:#1a4a1a;box-shadow:0 0 24px rgba(74,222,128,.45);transform:scale(1.04);}
+.btn-add:hover{background:#0d2a0d;box-shadow:0 0 24px rgba(74,222,128,.4);transform:scale(1.04);}
 
-/* Categories */
+/* Categories — sem emoji, texto em negrito */
 .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px;}
 .cat-btn{
-  background:#0a150a;border:1px solid #1a2e1a;color:#3a6a3a;
-  border-radius:20px;padding:6px 14px;font-size:18px;cursor:pointer;
-  font-family:'VT323',monospace;transition:all .15s;
+  background:#000;
+  border:1px solid #222;
+  color:#555;
+  border-radius:6px;
+  padding:7px 16px;
+  font-size:14px;
+  cursor:pointer;
+  font-family:'Press Start 2P',monospace;
+  font-weight:700;
+  letter-spacing:.04em;
+  transition:all .15s;
+  text-transform:uppercase;
 }
-.cat-btn:hover{filter:brightness(1.3);transform:scale(1.06);}
-.cat-btn.active{background:#1a3a1a;border-color:var(--green);color:var(--green);box-shadow:0 0 14px rgba(74,222,128,.2);}
+.cat-btn:hover{color:#aaa;border-color:#444;transform:scale(1.05);}
+.cat-btn.active{
+  background:#0a1f0a;
+  border-color:var(--green);
+  color:var(--green);
+  box-shadow:0 0 12px rgba(74,222,128,.25);
+  text-shadow:0 0 8px rgba(74,222,128,.4);
+}
 
 /* Grid */
 .farm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.empty{grid-column:1/-1;text-align:center;color:#2a4a2a;padding:60px 0;}
+.empty{grid-column:1/-1;text-align:center;color:#333;padding:60px 0;}
 .empty-icon{font-size:44px;margin-bottom:10px;}
 .empty-txt{font-size:22px;}
-.empty-sub{font-size:16px;color:#1a3a1a;margin-top:4px;}
+.empty-sub{font-size:16px;color:#222;margin-top:4px;}
 
 /* Farm card */
 .farm-card{
-  background:#0a150a;border:1px solid #1a2e1a;border-radius:10px;
-  overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.4);
+  background:#080808;
+  border:1px solid #1a1a1a;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.6);
   animation:cardIn .4s ease both;
   transition:transform .2s,box-shadow .2s;
 }
-.farm-card:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 10px 40px rgba(74,222,128,.12),0 0 0 1px rgba(74,222,128,.15);}
+.farm-card:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 40px rgba(74,222,128,.1),0 0 0 1px rgba(74,222,128,.12);}
 .card-img-wrap{height:150px;overflow:hidden;position:relative;cursor:zoom-in;}
 .card-img-wrap img{width:100%;height:100%;object-fit:cover;}
-.card-img-wrap .img-fade{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#0a150a);}
-.card-img-wrap .zoom-hint{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 6px;font-size:11px;color:#aaa;}
-.card-no-img{height:64px;display:flex;align-items:center;justify-content:center;font-size:36px;border-bottom:1px solid #1a2e1a;}
+.card-img-wrap .img-fade{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#080808);}
+.card-img-wrap .zoom-hint{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border-radius:4px;padding:2px 6px;font-size:11px;color:#888;}
+.card-no-img{height:64px;display:flex;align-items:center;justify-content:center;font-size:36px;border-bottom:1px solid #1a1a1a;}
 .card-body{padding:14px 16px;}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
-.card-name{font-family:'Press Start 2P',monospace;font-size:8px;color:#c0e8c0;line-height:1.6;flex:1;}
-.status-badge{font-size:13px;padding:3px 8px;border-radius:4px;white-space:nowrap;}
-.type-pill{display:inline-block;background:#0c1e0c;border:1px solid #1a3a1a;color:#4a9a5a;font-size:14px;padding:2px 10px;border-radius:12px;margin-bottom:8px;}
-.card-coords{color:#4a7a5a;font-size:16px;margin-bottom:6px;background:#060e06;border-radius:4px;padding:4px 8px;border:1px solid #0e1e0e;}
-.card-notes{color:#5a8a5a;font-size:16px;line-height:1.4;margin-bottom:10px;}
+.card-name{font-family:'Press Start 2P',monospace;font-size:8px;color:#e0e0e0;line-height:1.7;flex:1;}
+.status-badge{font-size:12px;padding:3px 8px;border-radius:4px;white-space:nowrap;font-family:'Press Start 2P',monospace;font-size:7px;}
+.type-pill{display:inline-block;background:#111;border:1px solid #222;color:#666;font-size:13px;padding:2px 10px;border-radius:12px;margin-bottom:8px;font-family:'Press Start 2P',monospace;font-size:7px;}
+.card-coords{color:#444;font-size:16px;margin-bottom:6px;background:#050505;border-radius:4px;padding:4px 8px;border:1px solid #111;}
+.card-notes{color:#555;font-size:16px;line-height:1.4;margin-bottom:10px;}
 .card-actions{display:flex;gap:8px;justify-content:flex-end;}
 .btn-edit,.btn-del{border-radius:6px;padding:6px 12px;cursor:pointer;font-size:16px;font-family:'VT323',monospace;transition:all .15s;}
-.btn-edit:hover,.btn-del:hover{transform:scale(1.15);filter:brightness(1.5);}
-.btn-edit{background:#0d1a0d;border:1px solid #1e3a1e;color:#4a9a6a;}
-.btn-del{background:#150808;border:1px solid #3a1a1a;color:#9a5a5a;}
+.btn-edit:hover,.btn-del:hover{transform:scale(1.15);filter:brightness(1.6);}
+.btn-edit{background:#0a0a0a;border:1px solid #1e3a1e;color:#4a9a6a;}
+.btn-del{background:#0f0606;border:1px solid #3a1a1a;color:#9a5a5a;}
 
 /* Modal overlay */
 .overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.92);
+  position:fixed;inset:0;background:rgba(0,0,0,.95);
   display:flex;align-items:center;justify-content:center;
   z-index:100;padding:16px;
 }
 .modal{
-  background:#0a150a;border:2px solid #2a4a2a;border-radius:12px;
+  background:#080808;border:1px solid #222;border-radius:12px;
   padding:24px;width:100%;max-width:480px;
-  box-shadow:0 0 80px rgba(74,222,128,.12);
+  box-shadow:0 0 80px rgba(74,222,128,.08);
   animation:fadeSlideIn .25s ease;
   max-height:90vh;overflow-y:auto;
 }
-.modal-title{color:var(--green);font-family:'Press Start 2P',monospace;font-size:11px;text-shadow:0 0 12px rgba(74,222,128,.5);margin-bottom:20px;}
+.modal-title{color:var(--green);font-family:'Press Start 2P',monospace;font-size:11px;text-shadow:0 0 12px rgba(74,222,128,.4);margin-bottom:20px;}
 .field{margin-bottom:14px;}
-.field label{display:block;color:#4a7a5a;font-size:10px;letter-spacing:.1em;margin-bottom:5px;font-family:'Press Start 2P',monospace;}
+.field label{display:block;color:#444;font-size:9px;letter-spacing:.1em;margin-bottom:5px;font-family:'Press Start 2P',monospace;}
 .field input,.field textarea,.field select{
-  width:100%;background:#060e06;border:1px solid #1e3a1e;border-radius:6px;
-  color:#c0e0c0;padding:10px 12px;font-size:19px;font-family:'VT323',monospace;
+  width:100%;background:#050505;border:1px solid #1e1e1e;border-radius:6px;
+  color:#ccc;padding:10px 12px;font-size:19px;font-family:'VT323',monospace;
   transition:border-color .2s,box-shadow .2s;
 }
-.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 14px rgba(74,222,128,.25);outline:none;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 12px rgba(74,222,128,.2);outline:none;}
 .field textarea{resize:vertical;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
 
 /* Image upload */
 .upload-zone{
   width:100%;border-radius:8px;
-  border:2px dashed #1e3a1e;background:#0a180a;
+  border:2px dashed #1e1e1e;background:#050505;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;overflow:hidden;position:relative;
   transition:all .2s;
 }
-.upload-zone:hover{border-color:var(--green);background:#0d200d;}
+.upload-zone:hover{border-color:var(--green);background:#0a150a;}
 .upload-zone.has-img{border-color:var(--green);}
 .upload-zone img{width:100%;height:100%;object-fit:cover;}
-.upload-hint{color:#2a5a2a;font-size:20px;padding:20px;text-align:center;}
+.upload-hint{color:#333;font-size:20px;padding:20px;text-align:center;}
 .btn-remove-img{background:none;border:none;color:#8a3a3a;font-size:15px;cursor:pointer;font-family:'VT323',monospace;margin-top:4px;}
 
 /* Modal actions */
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
-.btn-cancel{background:transparent;border:1px solid #1e3a1e;color:#4a6a4a;border-radius:6px;padding:10px 18px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;}
-.btn-save{background:#0d2a0d;border:2px solid var(--green);color:var(--green);border-radius:6px;padding:10px 24px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;transition:all .2s;}
-.btn-save:hover{background:#1a4a1a;box-shadow:0 0 20px rgba(74,222,128,.4);}
+.btn-cancel{background:transparent;border:1px solid #222;color:#444;border-radius:6px;padding:10px 18px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;}
+.btn-save{background:#000;border:2px solid var(--green);color:var(--green);border-radius:6px;padding:10px 24px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;transition:all .2s;}
+.btn-save:hover{background:#0d2a0d;box-shadow:0 0 20px rgba(74,222,128,.35);}
 
 /* Delete confirm */
 .del-modal{
-  background:#120505;border:2px solid #5a1a1a;border-radius:12px;
+  background:#080505;border:1px solid #3a1010;border-radius:12px;
   padding:28px;max-width:320px;text-align:center;width:100%;
   animation:shake .35s ease, fadeSlideIn .2s ease;
-  box-shadow:0 0 50px rgba(248,113,113,.15);
+  box-shadow:0 0 50px rgba(248,113,113,.1);
 }
 .del-icon{font-size:44px;margin-bottom:10px;}
 .del-title{color:var(--red);font-size:22px;line-height:1.4;margin-bottom:6px;}
-.del-sub{color:#7a3a3a;font-size:17px;margin-bottom:20px;}
+.del-sub{color:#5a2a2a;font-size:17px;margin-bottom:20px;}
 .del-actions{display:flex;gap:10px;justify-content:center;}
-.btn-del-confirm{background:#2d0000;border:2px solid var(--red);color:var(--red);border-radius:6px;padding:10px 18px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;box-shadow:0 0 14px rgba(248,113,113,.3);}
-.btn-del-cancel{background:#0a100a;border:1px solid #2a3a2a;color:#4a7a4a;border-radius:6px;padding:10px 18px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;}
+.btn-del-confirm{background:#1a0000;border:2px solid var(--red);color:var(--red);border-radius:6px;padding:10px 18px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;box-shadow:0 0 12px rgba(248,113,113,.2);}
+.btn-del-cancel{background:#0a0a0a;border:1px solid #222;color:#555;border-radius:6px;padding:10px 18px;cursor:pointer;font-size:17px;font-family:'VT323',monospace;}
 
 /* Expanded image */
-.img-expand-overlay{position:fixed;inset:0;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;z-index:200;cursor:zoom-out;padding:20px;}
-.img-expand-overlay img{max-width:90vw;max-height:90vh;border-radius:8px;border:2px solid #2a4a2a;box-shadow:0 0 80px rgba(74,222,128,.2);animation:fadeSlideIn .2s ease;}
+.img-expand-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:flex;align-items:center;justify-content:center;z-index:200;cursor:zoom-out;padding:20px;}
+.img-expand-overlay img{max-width:90vw;max-height:90vh;border-radius:8px;border:1px solid #222;box-shadow:0 0 80px rgba(74,222,128,.15);animation:fadeSlideIn .2s ease;}
 
 /* Hidden */
 .hidden{display:none!important;}
 
 /* Animations */
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes pulseGlow{0%,100%{text-shadow:0 0 20px rgba(74,222,128,.6),0 0 40px rgba(74,222,128,.3),3px 3px 0 #1a5a1a}50%{text-shadow:0 0 30px rgba(74,222,128,.9),0 0 60px rgba(74,222,128,.5),3px 3px 0 #1a5a1a}}
-@keyframes torchFlicker{0%,100%{opacity:1;transform:scaleY(1)}25%{opacity:.8;transform:scaleY(.92)}75%{opacity:.9;transform:scaleY(1.05)}}
+@keyframes pulseGlow{
+  0%,100%{text-shadow:0 0 20px rgba(74,222,128,.5),0 0 40px rgba(74,222,128,.2),3px 3px 0 #0a2a0a}
+  50%{text-shadow:0 0 30px rgba(74,222,128,.8),0 0 60px rgba(74,222,128,.4),3px 3px 0 #0a2a0a}
+}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes cardIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 @keyframes statPop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
-@keyframes starTwinkle{0%,100%{opacity:.15}50%{opacity:.8}}
 
 @media(max-width:500px){
-  .stats{grid-template-columns:repeat(2,1fr);}
   .field-row{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
 
-<canvas id="stars-canvas"></canvas>
-<div class="grid-bg"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="vignette"></div>
 <div class="scanlines"></div>
 
 <div class="wrap">
@@ -219,12 +238,10 @@ body {
   <div class="header">
     <div class="pick">⛏️</div>
     <h1 class="title">FARM CATALOG</h1>
-    <div class="subtitle">
-      <span class="torch">🔥</span> MEU MUNDO MINECRAFT <span class="torch2">🔥</span>
-    </div>
+    <div class="subtitle">SURVIVAL FOE</div>
   </div>
 
-  <!-- Stats -->
+  <!-- Stats: só total -->
   <div class="stats" id="stats"></div>
 
   <!-- Controls -->
@@ -310,15 +327,15 @@ body {
 const CATS = ['Todas','Mob','Recursos','Comida','XP','Redstone','Outras'];
 const CAT_EMOJI = {Todas:'🗺',Mob:'👾',Recursos:'⛏',Comida:'🌾',XP:'⚗️',Redstone:'🔴',Outras:'🧱'};
 const STATUS = {
-  'Funcionando': {color:'#4ade80', bg:'#052e16', icon:'✦', label:'ONLINE'},
-  'Quebrada':    {color:'#f87171', bg:'#2d0000', icon:'✖', label:'OFFLINE'},
-  'Em construção':{color:'#facc15',bg:'#1c1400', icon:'◈', label:'WIP'},
+  'Funcionando':    {color:'#4ade80', bg:'#041a04', icon:'✦', label:'ONLINE'},
+  'Quebrada':       {color:'#f87171', bg:'#1a0404', icon:'✖', label:'QUEBRADA'},
+  'Em construção':  {color:'#facc15', bg:'#1a1204', icon:'◈', label:'WIP'},
 };
 
 let farms = [
-  {id:1, nome:'Farm de Iron Golem', tipo:'Mob',     coords:'X: 120, Y: 64, Z: -340', status:'Funcionando',    notas:'Produz ~1000 iron/h. Requer 4 aldeias linkadas.', img:null},
-  {id:2, nome:'Farm de Trigo',      tipo:'Comida',  coords:'X: 0, Y: 70, Z: 200',    status:'Funcionando',    notas:'Automática com villager fazendeiro.', img:null},
-  {id:3, nome:'Farm de Blaze',      tipo:'XP',      coords:'X: -880, Y: 53, Z: 440', status:'Quebrada',       notas:'Spawner bugado após update. Precisa de reforma.', img:null},
+  {id:1, nome:'Farm de Iron Golem', tipo:'Mob',    coords:'X: 120, Y: 64, Z: -340', status:'Funcionando',   notas:'Produz ~1000 iron/h. Requer 4 aldeias linkadas.', img:null},
+  {id:2, nome:'Farm de Trigo',      tipo:'Comida', coords:'X: 0, Y: 70, Z: 200',    status:'Funcionando',   notas:'Automática com villager fazendeiro.', img:null},
+  {id:3, nome:'Farm de Blaze',      tipo:'XP',     coords:'X: -880, Y: 53, Z: 440', status:'Quebrada',      notas:'Spawner bugado após update. Precisa de reforma.', img:null},
 ];
 let nextId = 4;
 let activeCat = 'Todas';
@@ -326,57 +343,87 @@ let editingId = null;
 let deleteId = null;
 let formImg = null;
 
-// Stars
+/* ── Animated background ── */
 (function(){
-  const c = document.getElementById('stars-canvas');
+  const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
-  let stars = [];
-  function resize(){c.width=innerWidth;c.height=innerHeight;}
-  function init(){
-    stars=[];
-    for(let i=0;i<40;i++) stars.push({
-      x:Math.random()*c.width, y:Math.random()*c.height*.65,
-      r:Math.random()>.7?1.5:1, phase:Math.random()*Math.PI*2,
-      speed:.5+Math.random()*.8
-    });
+  let particles = [], stars = [];
+
+  function resize(){
+    c.width = innerWidth; c.height = innerHeight;
+    initStars(); initParticles();
   }
+
+  function initStars(){
+    stars = Array.from({length:60},()=>({
+      x: Math.random()*c.width,
+      y: Math.random()*c.height,
+      r: Math.random()>.75?1.5:1,
+      phase: Math.random()*Math.PI*2,
+      speed: .4+Math.random()*.9,
+    }));
+  }
+
+  function initParticles(){
+    particles = Array.from({length:18},()=>makeParticle());
+  }
+
+  function makeParticle(){
+    return {
+      x: Math.random()*c.width,
+      y: Math.random()*c.height,
+      vx: (Math.random()-.5)*.3,
+      vy: -.2-Math.random()*.4,
+      size: 1+Math.random()*2,
+      life: Math.random(),
+      maxLife: .4+Math.random()*.6,
+      color: Math.random()>.5 ? '74,222,128' : '100,180,100',
+    };
+  }
+
   function draw(){
     ctx.clearRect(0,0,c.width,c.height);
-    const t=Date.now()/1000;
+    const t = Date.now()/1000;
+
+    // Stars
     stars.forEach(s=>{
-      const a=.15+.65*(.5+.5*Math.sin(t*s.speed+s.phase));
-      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fill();
+      const a = .1+.5*(.5+.5*Math.sin(t*s.speed+s.phase));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${a})`; ctx.fill();
     });
+
+    // Floating particles (green dust)
+    particles.forEach((p,i)=>{
+      p.x += p.vx; p.y += p.vy; p.life += .004;
+      if(p.life>=p.maxLife){ particles[i]=makeParticle(); return; }
+      const progress = p.life/p.maxLife;
+      const a = progress<.3 ? progress/.3 : 1-((progress-.3)/.7);
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size*(1-progress*.5),0,Math.PI*2);
+      ctx.fillStyle=`rgba(${p.color},${a*.35})`; ctx.fill();
+    });
+
+    // Subtle green grid glow at random spots
     requestAnimationFrame(draw);
   }
-  resize();init();draw();
-  window.addEventListener('resize',()=>{resize();init();});
+
+  resize(); draw();
+  window.addEventListener('resize', resize);
 })();
 
+/* ── Render ── */
 function renderStats(){
-  const total=farms.length;
-  const online=farms.filter(f=>f.status==='Funcionando').length;
-  const broken=farms.filter(f=>f.status==='Quebrada').length;
-  const wip=farms.filter(f=>f.status==='Em construção').length;
-  const items=[
-    {label:'TOTAL',val:total,color:'#60a5fa',icon:'📦'},
-    {label:'ONLINE',val:online,color:'#4ade80',icon:'✦'},
-    {label:'OFFLINE',val:broken,color:'#f87171',icon:'✖'},
-    {label:'WIP',val:wip,color:'#facc15',icon:'◈'},
-  ];
-  document.getElementById('stats').innerHTML=items.map((s,i)=>`
-    <div class="stat-card" style="background:${s.color}0a;border:1px solid ${s.color}30;animation-delay:${.3+i*.08}s">
-      <div class="stat-icon">${s.icon}</div>
-      <div class="stat-val" style="color:${s.color};text-shadow:0 0 12px ${s.color}77">${s.val}</div>
-      <div class="stat-lbl">${s.label}</div>
+  const total = farms.length;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat-card" style="background:#4ade800a;border:1px solid #4ade8030;animation-delay:.3s">
+      <div class="stat-val" style="color:#4ade80;text-shadow:0 0 16px #4ade8099">${total}</div>
+      <div class="stat-lbl">FARMS NO MUNDO</div>
     </div>
-  `).join('');
+  `;
 }
 
 function renderCats(){
   document.getElementById('cats').innerHTML=CATS.map(c=>`
-    <button class="cat-btn ${activeCat===c?'active':''}" onclick="setCat('${c}')">${CAT_EMOJI[c]} ${c}</button>
+    <button class="cat-btn ${activeCat===c?'active':''}" onclick="setCat('${c}')">${c}</button>
   `).join('');
 }
 
@@ -404,16 +451,16 @@ function render(){
           <div class="img-fade"></div>
           <div class="zoom-hint">🔍</div>
         </div>`
-      :`<div class="card-no-img" style="background:${st.color}07">${CAT_EMOJI[farm.tipo]}</div>`;
+      :`<div class="card-no-img" style="background:${st.color}06">${CAT_EMOJI[farm.tipo]}</div>`;
     return `
-      <div class="farm-card" style="border-top:3px solid ${st.color};animation-delay:${idx*.07}s">
+      <div class="farm-card" style="border-top:2px solid ${st.color};animation-delay:${idx*.07}s">
         ${imgHtml}
         <div class="card-body">
           <div class="card-top">
             <div class="card-name">${farm.nome}</div>
-            <span class="status-badge" style="background:${st.bg};border:1px solid ${st.color}44;color:${st.color};box-shadow:0 0 8px ${st.color}33">${st.icon} ${st.label}</span>
+            <span class="status-badge" style="background:${st.bg};border:1px solid ${st.color}33;color:${st.color}">${st.icon} ${st.label}</span>
           </div>
-          <span class="type-pill">${CAT_EMOJI[farm.tipo]} ${farm.tipo}</span>
+          <span class="type-pill">${farm.tipo}</span>
           ${farm.coords?`<div class="card-coords">📍 ${farm.coords}</div>`:''}
           ${farm.notas?`<div class="card-notes">${farm.notas}</div>`:''}
           <div class="card-actions">
@@ -449,18 +496,14 @@ function openEdit(id){
   document.getElementById('f-notas').value=f.notas;
   if(f.img){
     const z=document.getElementById('upload-zone');
-    z.style.height='150px';
-    z.classList.add('has-img');
+    z.style.height='150px'; z.classList.add('has-img');
     z.innerHTML=`<img src="${f.img}" alt="preview"/>`;
     document.getElementById('btn-remove-img').classList.remove('hidden');
-  } else {
-    resetUploadZone();
-  }
+  } else { resetUploadZone(); }
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
 function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
-
 function overlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 
 function salvar(){
@@ -474,22 +517,18 @@ function salvar(){
     notas:document.getElementById('f-notas').value.trim(),
     img:formImg,
   };
-  if(editingId){
-    farms=farms.map(f=>f.id===editingId?{...farm,id:editingId}:f);
-  } else {
-    farms.push({...farm,id:nextId++});
-  }
-  closeModal();render();
+  if(editingId) farms=farms.map(f=>f.id===editingId?{...farm,id:editingId}:f);
+  else farms.push({...farm,id:nextId++});
+  closeModal(); render();
 }
 
 function handleImg(e){
-  const file=e.target.files[0];
-  if(!file)return;
+  const file=e.target.files[0]; if(!file)return;
   const r=new FileReader();
   r.onload=ev=>{
     formImg=ev.target.result;
     const z=document.getElementById('upload-zone');
-    z.style.height='150px';z.classList.add('has-img');
+    z.style.height='150px'; z.classList.add('has-img');
     z.innerHTML=`<img src="${formImg}" alt="preview"/>`;
     document.getElementById('btn-remove-img').classList.remove('hidden');
   };
@@ -497,13 +536,13 @@ function handleImg(e){
 }
 
 function removeImg(){
-  formImg=null;resetUploadZone();
+  formImg=null; resetUploadZone();
   document.getElementById('img-input').value='';
 }
 
 function resetUploadZone(){
   const z=document.getElementById('upload-zone');
-  z.style.height='80px';z.classList.remove('has-img');
+  z.style.height='80px'; z.classList.remove('has-img');
   z.innerHTML='<div class="upload-hint">📷 CLIQUE PARA ADICIONAR IMAGEM</div>';
   document.getElementById('btn-remove-img').classList.add('hidden');
 }
